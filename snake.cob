@@ -47,6 +47,10 @@
  01  KEY-S                 BINARY-LONG VALUE 115.
  01  KEY-D                 BINARY-LONG VALUE 100.
  01  KEY-Q                 BINARY-LONG VALUE 113.
+ 01  KEY-UP                BINARY-LONG VALUE 259.
+ 01  KEY-DOWN              BINARY-LONG VALUE 258.
+ 01  KEY-LEFT              BINARY-LONG VALUE 260.
+ 01  KEY-RIGHT             BINARY-LONG VALUE 261.
 
  01  ERR-CODE              BINARY-LONG VALUE -1.
 
@@ -69,6 +73,7 @@
  01  POS-X                 BINARY-SHORT.
  01  POS-Y                 BINARY-SHORT.
  01  CURX                  BINARY-SHORT.
+ 01  stdscr                POINTER.
 
  PROCEDURE DIVISION.
  MAIN-SECTION.
@@ -86,9 +91,10 @@
      STOP RUN.
 
  INIT-CURSES.
-     CALL "initscr"
+     CALL "initscr" RETURNING stdscr
      CALL "noecho"
      CALL "cbreak"
+     CALL "keypad" USING BY VALUE stdscr, 1   *> enable arrow keys
      CALL "timeout" USING BY VALUE 0     *> non-blocking getch
      CALL "curs_set" USING BY VALUE 0    *> hide cursor
      .
@@ -123,7 +129,17 @@
                  MOVE -1 TO dir-y
                  MOVE 0  TO dir-x
               END-IF
+           WHEN KEY-UP
+              IF dir-y = 0
+                 MOVE -1 TO dir-y
+                 MOVE 0  TO dir-x
+              END-IF
            WHEN KEY-S
+              IF dir-y = 0
+                 MOVE 1 TO dir-y
+                 MOVE 0 TO dir-x
+              END-IF
+           WHEN KEY-DOWN
               IF dir-y = 0
                  MOVE 1 TO dir-y
                  MOVE 0 TO dir-x
@@ -133,7 +149,17 @@
                  MOVE -1 TO dir-x
                  MOVE 0  TO dir-y
               END-IF
+           WHEN KEY-LEFT
+              IF dir-x = 0
+                 MOVE -1 TO dir-x
+                 MOVE 0  TO dir-y
+              END-IF
            WHEN KEY-D
+              IF dir-x = 0
+                 MOVE 1 TO dir-x
+                 MOVE 0 TO dir-y
+              END-IF
+           WHEN KEY-RIGHT
               IF dir-x = 0
                  MOVE 1 TO dir-x
                  MOVE 0 TO dir-y
@@ -280,9 +306,6 @@
     .
 
  TEARDOWN.
-    CALL "endwin"
-    DISPLAY "Game Over! Final score: " score UPON CONSOLE
-    .
      CALL "endwin"
      DISPLAY "Game Over! Final score: " score UPON CONSOLE
      .
